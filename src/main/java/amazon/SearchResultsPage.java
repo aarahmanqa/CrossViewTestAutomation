@@ -1,38 +1,31 @@
 package amazon;
 
+import amazon.mobile.MobileSearchResultsPage;
+import amazon.web.WebSearchResultsPage;
 import com.codeborne.selenide.SelenideElement;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.codeborne.selenide.Condition.appear;
 import static com.codeborne.selenide.Selenide.$$x;
-import static com.codeborne.selenide.Selenide.$x;
 
-public class SearchResultsPage {
-    private final SelenideElement seSeeMoreLinkInBrands = $x("//a[@aria-label='See more, Brands']");
-    private final List<SelenideElement> seBrandsList = $$x("//div[@id='brandsRefinements']//li/span");
-    private final List<SelenideElement> seProductsList = $$x("//div[@data-cy='title-recipe']");
+public abstract class SearchResultsPage {
+    protected final List<SelenideElement> seProductsList = $$x("//div[@data-cy='title-recipe']");
 
-    public SearchResultsPage chooseBrands(String... brands) {
-        seSeeMoreLinkInBrands.click();
-
-        for (String brand : brands) {
-            for(SelenideElement element : seBrandsList) {
-                element.should(appear);
-                if (element.text().equalsIgnoreCase(brand)) {
-                    element.click();
-                    break;
-                }
-            }
-        }
-        return this;
+    public static SearchResultsPage init() {
+        return TestContext.isMobile.get() ? new MobileSearchResultsPage() : new WebSearchResultsPage();
     }
 
-    public List<String> getProductNames() {
-        return seProductsList.stream()
+    public abstract SearchResultsPage chooseBrands(String... brands);
+
+    public boolean validateProductsAreFromSameBrand(String...brands) {
+        List<String> productNames = seProductsList.stream()
                 .map(selenideElement -> selenideElement.should(appear))
                 .map(SelenideElement::text)
-                .collect(Collectors.toList());
+                .toList();
+        return productNames.stream()
+                .allMatch(productName -> Arrays.stream(brands).anyMatch(productName::contains));
     }
 }

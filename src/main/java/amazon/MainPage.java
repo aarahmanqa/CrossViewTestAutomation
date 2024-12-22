@@ -1,20 +1,14 @@
 package amazon;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.SelenideElement;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
+import amazon.mobile.MobileMainPage;
+import amazon.web.WebMainPage;
 
-import static com.codeborne.selenide.Selenide.$;
+public abstract class MainPage {
 
-public class MainPage {
-    private final SelenideElement searchField = $(By.id("twotabsearchtextbox"));
-
-    public SearchResultsPage searchForProduct(String productName) {
-        searchField
-                .should(Condition.appear)
-                .setValue(productName)
-                .pressEnter();
-        return new SearchResultsPage();
+    public static MainPage init() {
+        return TestContext.isMobile.get() ? new MobileMainPage() : new WebMainPage();
     }
+
+    public abstract SearchResultsPage searchForProduct(String productName);
+
 }
